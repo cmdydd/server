@@ -11,16 +11,16 @@
 #
 # def expansion_data():
 #     train_fi = pd.read_csv("./data/ceshi1.csv", engine='python',
-#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
+#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
 #     train_se = pd.read_csv("./data/ceshi2.csv", engine='python',
-#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
+#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
 #     train_th = pd.read_csv("./data/ceshi3.csv", engine='python',
-#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
+#                            usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
 #     # 合并所有数据
 #     train_all = train_fi
 #     train_all = train_all.append(train_se)
 #     train_all = train_all.append(train_th)
-#     train_all_tags = train_all.pop("category")
+#     train_all_tags = train_all.pop("label")
 #     # 小样本抽取
 #     i = 0.05
 #     data = "expansion_data&"
@@ -36,9 +36,9 @@
 #         new_train_se = train_se.append(select_data_three)
 #         new_train_th = train_th.append(select_data_one)
 #
-#         new_tags_fi = new_train_fi.pop('category')
-#         new_tags_se = new_train_se.pop('category')
-#         new_tags_th = new_train_th.pop('category')
+#         new_tags_fi = new_train_fi.pop('label')
+#         new_tags_se = new_train_se.pop('label')
+#         new_tags_th = new_train_th.pop('label')
 #
 #         # data += "小样本抽取比例：%d 扩充前样本数目：{ 0:%d, 1:%d } \n" % (i, Counter(new_tags_fi).items())
 #         # data += "小样本抽取比例：%d 扩充前样本数目：%s \n" % (i, Counter(new_tags_se).items())

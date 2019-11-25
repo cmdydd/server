@@ -4,9 +4,8 @@ from urllib import parse
 import DBSCAN
 import K_Means
 import XGBoost
-# import XGBoost_1
+import const
 import decision
-import random_r
 import smote_compare
 import smote_expansion_data
 
@@ -21,18 +20,18 @@ class AjaxHandler(http.server.BaseHTTPRequestHandler):
         data = parsed_path.query  # 前端传输数据
         # array = data.split('=')
         arr = self.prase_data(data)
-        print("arr:", arr)
+        print("data:", arr)
         self.start(arr)
 
     def prase_data(self, b):
-        ret = []
+        ret = {}
         array1 = b.split('&')
         for i in array1:
             array2 = i.split('=')
             if len(array2) < 2:
                 print("前端数据划分出错")
             else:
-                ret.append(array2[1])
+                ret[array2[0]] = array2[1]
         return ret
 
     def start(self, data):
@@ -40,27 +39,20 @@ class AjaxHandler(http.server.BaseHTTPRequestHandler):
         result = ""
         if len(data) <= 1:
             result = "<p>出错</p>"
-        elif data[0] == "expansion_data":
-            result = smote_expansion_data.expansion_data()
-        elif data[0] == "smote_compare":
-            result = smote_compare.draw_pic()
-        elif data[0] == "DBSCAN":
-            result = DBSCAN.deal(data[2])
-            # result = "DBSCAN&picture/DBSCAN_cluster.gif$Accuracy:0.9963235294117647"
-        elif data[0] == "decision":
-            result = decision.deal(data[2])
-            # result = "decision&picture/decision_tree.png#picture/decision_variable_importance.png$Accuracy:0.9999922970859876\nRecall:0.9999908273711247\nF-1 score:0.9999922981587652#picture/decision_predict_result.csv"
-        elif data[0] == "random_forest":
-            result = random_r.d(data[1], data[2])
-            # result = test.Example(path, feature_cols)
-            # result = "randomforest&picture/random_tree.png#picture/random_variable_importance.png$Accuracy:0.9954548172956162\nRecall:0.9864977747506242\nF-1 score:0.995440673267568#picture/random_predict_result.csv"
-        elif data[0] == "XGBoost":
-            result = XGBoost.deal(data[1], data[2])
-            # result = "XGBoost&picture/XGBoost_tree.png#picture/XGBoost_variable_importance.png$Accuracy:0.9821083268544545\nRecall:0.9427370344236331\nF-1 score:0.9818209736497626#picture/XGBoost_predict_result.csv"
-        elif data[0] == "KMeans":
-            print("data[2]:", data[2])
-            result = K_Means.deal(data[2])
-            # result = "KMeans&picture/kmeans_cluster.png$Accuracy:0.9809711875056099#picture/kmeans_predict_result.csv"
+        else:
+            name = data.get("name", "")
+            if name == "expansion_data":
+                result = smote_expansion_data.expansion_data()
+            elif name == "smote_compare":
+                result = smote_compare.draw_pic()
+            elif name == "DBSCAN":
+                result = DBSCAN.deal(data.get("all_file", ""))
+            elif name == const.DECISION or name == const.RANDOM_FOREST:
+                result = decision.deal(data)
+            elif name == "XGBoost":
+                result = XGBoost.deal_real(data)
+            elif name == "KMeans":
+                result = K_Means.deal(data["all_file"])
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset = UTF-8")
         self.send_header("Access-Control-Allow-Origin", "*")

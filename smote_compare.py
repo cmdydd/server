@@ -11,16 +11,16 @@ import const
 mpl.rcParams['font.sans-serif'] = ['SimHei']
 mpl.rcParams['axes.unicode_minus'] = False
 xlable = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-train = pd.read_csv('data/ceshi1.csv', engine='python',
-                    usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
-train2 = pd.read_csv('data/ceshi2.csv', engine='python',
-                     usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
-train3 = pd.read_csv('data/ceshi3.csv', engine='python',
-                     usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'category'])
+train = pd.read_csv(const.ceshi1_path, engine='python',
+                    usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
+train2 = pd.read_csv(const.ceshi2_path, engine='python',
+                     usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
+train3 = pd.read_csv(const.ceshi3_path, engine='python',
+                     usecols=['TOA', 'PA', 'PW', 'RF_START', 'DOA', 'label'])
 train_all = train
 train_all = train_all.append(train2)
 train_all = train_all.append(train3)
-train_all_tags = train_all.pop("category")
+train_all_tags = train_all.pop('label')
 train_all_date = train_all
 X_train, X_test, y_train, y_test = model_selection. \
     train_test_split(train_all_date, train_all_tags, test_size=0.2, random_state=42)

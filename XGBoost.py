@@ -1,68 +1,119 @@
-# 2.一个树形的png文件，需要打开,显示在实验过程中
-# 名称：XGBoost_tree.png
-# 路径： path1 = "picture/XGBoost_tree.png"
-
-# 2.特征重要性图,显示在实验过程中
-# 名称：XGBoost_variable_importance_2.png
-# 路径： path2 = "picture/XGBoost_variable_importance.png"
-
-# 3.分选准确率，显示在实验结果中
-# Accuracy:90%
-
-
-# 4.csv文件“预测结果”
-# 名称：XGBoost_predict_result.csv
-# 路径：res.to_csv(r"picture/XGBoost_predict_result.csv",
-#            mode='a', index=False)
-# 路径：path3="picture/XGBoost_predict_result.csv"
-
+import os
+import pickle
 import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pylab import mpl
-from sklearn import metrics
 from sklearn import model_selection
 from xgboost.sklearn import XGBClassifier
 
 import const
 
 warnings.filterwarnings('ignore')
-
-mpl.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体：解决plot不能显示中文问题
-mpl.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+Label = 'label'
 
 
-def XGBoost(file_path, path_1, path_2, path_3, col):
-    # 计算特征重要性
-    def plot_feature_importance(model, X_train, path2):
-        feat_labels = X_train.columns
-        importances = model.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        for f in range(X_train.shape[1]):
-            print("%2d)  %-*s  %f" % (f + 1, 30,
-                                      feat_labels[f],
-                                      importances[indices[f]]))
-        plt.title('特征重要性分析', fontsize=20)
-        font2 = {'size': 20}
-        plt.xlabel(u'特征变量', font2)
-        plt.ylabel(u'重要度', font2)
-        plt.xticks(range(X_train.shape[1]),
-                   feat_labels, rotation=0, fontsize=20)
-        plt.yticks(fontsize=20)
-        plt.xlim([-1, X_train.shape[1]])
-        plt.bar(range(X_train.shape[1]),
-                importances[indices],
-                color='lightblue',
-                align='center')
-        plt.tight_layout()
-        plt.savefig(path2)
-        plt.show()
+class Example_XGB:
+    def __init__(self, filePath, cols):
+        mpl.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体：解决plot不能显示中文问题
+        mpl.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+        # 读入表格文件函数
+        self.all = pd.read_csv(filePath, encoding='UTF-8')
+        own_feature = self.all.columns.values  # 数据集具备的特征，包含标签label
+        self.feature_cols = self.get_feature(cols, own_feature)  # cols：需要的特征，feature_cols: 特征交集
+        # if self.feature_cols == "err":
+        #     err = "err&模型加载错误或测试文件读取失败！"
+        self.y_pred = []
 
-    # XGBoost结果可视化
+        self.model = XGBClassifier()
+        print("初始化完成...")
 
-    def ceate_feature_map(features, fmap_filename, path_1):
+    def split_file(self, test_file_path, train_file_path):
+        if len(self.feature_cols) == 0:
+            return "err"
+        X = self.all
+        y = X.pop(Label)  # pop() 函数用于移除列表中的一个元素（默认最后一个元素），并且返回该元素的值
+        X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size=0.3)
+
+        X_test = X_test[self.feature_cols]
+        X_train = X_train[self.feature_cols]
+
+        train_data = pd.concat([X_train, Y_train], axis=1)
+        train_data.to_csv(train_file_path, index=False, encoding='UTF-8')  # 训练集文件
+
+        test_data = pd.concat([X_test, Y_test], axis=1)
+        test_data.to_csv(test_file_path, index=False, encoding='UTF-8')  # 测试集文件
+
+        return ""
+
+    # 特征处理
+    def get_feature(self, feature1, feature2):
+        # 两种求列表并集的方法
+        feature3 = (set(feature1) - set(feature2))  # 需要但是不具备的特征
+        feature4 = list(set(feature1) - feature3)  # 需要且具备的特征
+        if len(feature4) <= 1:
+            return "err"
+        else:
+            return feature4
+
+        # 传 树形图 ，柱状图
+        # filePath 文件路径
+        # feature_cols 标签
+
+    def process(self, train, path1, path2):
+        # 数据处理，模型调用
+        # self.plot_feature_importance(train, path2)
+        fmap_filename = "picture/xgb_2.fmap"
+        self.tree_pic(self.feature_cols, fmap_filename, path1)
+        self.plot_feature_importance(train, path2)
+
+    def train_model(self, train_file, model_file):
+        # if model_file != "":
+        #     f = open(model_file, 'rb')
+        #     self.model = pickle.load(f)  # 读取模型
+        train_data = pd.read_csv(train_file)
+        x_train = train_data
+        y_train = x_train.pop(Label)
+        self.model.fit(x_train, y_train)
+        if not os.path.exists(model_file):
+            f = open(model_file, mode='ab')
+        else:
+            f = open(model_file, mode="wb")
+        pickle.dump(self.model, f)  # 保存模型
+
+        return x_train
+
+    def result(self, all_file, model_file, test_file_path, img_path):
+        if model_file != "" or all_file == "" or test_file_path == "":
+            f = open(model_file, 'rb')
+            self.model = pickle.load(f)  # 读取模型
+        else:
+            return "err"
+
+        train_data = pd.read_csv(test_file_path)
+        x_test = train_data
+        y_test = x_test.pop(Label)
+
+        y_pred = self.model.predict(x_test)  # 模型测试
+
+        # 计算评价指标
+        accuracy = self.model.score(x_test, y_test)
+        accuracy = '%.4f%%' % (accuracy * 100)
+        ret = "准确率:{0}".format(accuracy)
+        print("ret:", ret)
+
+        y_pred = y_pred.reshape(y_pred.shape[0], 1)
+        a = pd.read_csv(all_file, encoding='utf-8')
+        res = a.loc[y_test.index]
+        res['pred'] = y_pred
+        res = res.iloc[0:500]
+        res.to_csv(img_path, mode='a', index=False)
+
+        return ret
+
+    def tree_pic(self, features, fmap_filename, path_1):
         outfile = open(fmap_filename, 'w')
         i = 0
         for feat in features:
@@ -70,81 +121,109 @@ def XGBoost(file_path, path_1, path_2, path_3, col):
             i = i + 1
         outfile.close()
         from xgboost import plot_tree
-        plot_tree(model, num_trees=0, fmap=fmap_filename)
+        plot_tree(self.model, num_trees=0, fmap=fmap_filename)
         fig = plt.gcf()
         fig.set_size_inches(15, 10)
         fig.savefig(path_1)
-        from PIL import Image
-        im = Image.open(path_1)
-        im.show()
+        # im = Image.open(path_1)
+        # im.show()
 
-    # 读入表格文件函数
-    train = pd.read_csv(file_path, encoding='UTF-8')
-    X = train
-    y = X.pop('label')
-    feature_cols = col
-    model = XGBClassifier()
-    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size=0.3)
-    X_train = X_train[feature_cols]
-    X_test = X_test[feature_cols]
-    model.fit(X_train, Y_train)
-    y_pred = model.predict(X_test)
-    # 计算评价指标
-    accuracy = model.score(X_test, Y_test)
-    accuracy = '%.4f%%' % (accuracy * 100)
-    recall = metrics.recall_score(Y_test, y_pred, average='macro')
-    recall = '%.4f%%' % (recall * 100)
-    f1 = metrics.f1_score(Y_test, y_pred, average='weighted')
-    f1 = '%.4f%%' % (f1 * 100)
-    ret = "准确率:{}\n召回率:{}\nF-1 score:{}".format(accuracy, recall, f1)
-    # ret = "\033[1;31;40m准确率:{:.2%}\033[0m\nRecall:{}\nF-1 score:{}".format(accuracy, recall, f1)
+    def plot_feature_importance(self, x_train, path2):
+        plt.clf()  # 清空画板
+        feat_labels = x_train.columns
+        importances = self.model.feature_importances_
+        indices = np.argsort(importances)[::-1]
+        for f in range(x_train.shape[1]):
+            print("%2d)  %-*s  %f" % (f + 1, 30,
+                                      feat_labels[f],
+                                      importances[indices[f]]))
+        plt.title('特征重要性分析', fontsize=18)
+        plt.bar(range(x_train.shape[1]),
+                importances[indices],
+                color='lightblue',
+                align='center')
+        font2 = {'size': 18}
+        plt.xlabel(u'特征变量', font2)
+        plt.ylabel(u'重要度', font2)
+        plt.xticks(range(x_train.shape[1]),
+                   feat_labels, rotation=0, fontsize=16)
+        plt.yticks(fontsize=18)
+        plt.xlim([-1, x_train.shape[1]])
+        plt.tight_layout()
+        plt.savefig(path2)
+        # fig = plt.gcf()
+        # fig.savefig(path2)
+        # plt.show()
 
-    plot_feature_importance(model, X_train, path_2)
-
-    # 输出预测值与原有分类的对比
-    y_pred = y_pred.reshape(y_pred.shape[0], 1)
-    train1 = pd.read_csv(file_path, encoding='UTF-8')
-    res = train1.loc[Y_test.index]
-    res['pred'] = y_pred
-    res = res.iloc[0:500]
-    res.to_csv(path_3)
-
-    fmap_filename = "picture/xgb_2.fmap"
-    ceate_feature_map(feature_cols, fmap_filename, path_1)
-    return ret
+    # XGBoost结果可视化
 
 
-def deal(seq, file_path):
-    file_path = "data/{}".format(file_path)
-    path_1 = "picture/XGBoost_tree.png"
-    path_2 = "picture/XGBoost_variable_importance.png"
-    path_3 = "picture/XGBoost_predict_result.csv"
+def deal_real(data):
+    name = data.get("name", "")
+    if name != "":
+        seq = data.get("seq", "")
+        fea = get_featureby_by_seq(seq)
+        all_file = "{}/{}".format("data", data.get("all_file", ""))
+        step = data.get("step", "")
+        model_file = const.model_file_format.format(name)
+        train_file = const.train_file_format.format(const.CURRENT_DIR, name)
+        test_file = const.test_file_format.format(const.CURRENT_DIR, name)
+        print("name:", name, "fea:", fea, "all_file:", all_file, "step:", step)
+        if step == const.SPLIT:
+            print("开始划分数据...")
+            return split_file(name, all_file, test_file, train_file, fea)
+        elif step == const.TRAIN:
+            print("开始训练数据...")
+            return train_model(name, all_file, fea, train_file, model_file)
+        elif step == const.TEST:
+            print("开始测试数据...")
+            return test_mdoel(name, all_file, fea, test_file, model_file)
+        else:
+            return const.err_format.format("step error")
+
+    return const.err_format.format("name must have")
+
+
+def get_featureby_by_seq(seq):
+    feature = []
     if seq == "a":
         feature = ['TOA', 'PA', 'RF_START', 'DOA']  # 准确率高的
     elif seq == "b":
-        feature = ['Beam', 'PA', 'PAL', 'PA_MID']  # 准确率低的
+        feature = ['Beam', 'PA', 'PAL', 'PA_MID']  # 准确率较低的
     elif seq == "c":
-        feature = ['PAL', 'PAR', 'PA3']  # 准确率最低的
+        feature = ['PAL', 'PAR', 'PA3']  # 准确低的
+    return feature
+
+
+def split_file(name, all_file, train_file, test_file, feature):
+    ex = Example_XGB(all_file, feature)
+    err = ex.split_file(test_file, train_file)
+    if err == "err":
+        return const.err_format.format("特征不足，无法分选")
     else:
-        print("特征传输错误")
-        return "error"
+        ret = "{}&{}${}${}".format(name, const.SPLIT, train_file, test_file)
+        return ret
 
-    path_1 = const.DIR_FORMAT.format(const.CURRENT_DIR, path_1)
-    path_2 = const.DIR_FORMAT.format(const.CURRENT_DIR, path_2)
-    path_3 = const.DIR_FORMAT.format(const.CURRENT_DIR, path_3)
-    ret = XGBoost(file_path, path_1, path_2, path_3, feature)
 
-    str = "XGBoost&{}#{}${}#{}".format(path_1, path_2, ret, path_3)
-    return str
+def train_model(name, all_file, feature, train_file, model_file):
+    ex = Example_XGB(all_file, feature)
+    train = ex.train_model(train_file, model_file)
+    path_1 = const.img_tree_format.format(const.CURRENT_DIR, name)
+    path_2 = const.img_impr_format.format(const.CURRENT_DIR, name)
+    ex.process(train, path_1, path_2)
+
+    ret = "{}&{}${}#{}".format(name, const.TRAIN, path_1, path_2)
+    return ret
+
+
+def test_mdoel(name, all_file, feature, test_file, model_file):
+    ex = Example_XGB(all_file, feature)
+    img_path = const.result_file_format.format(const.CURRENT_DIR, name)
+
+    ret = ex.result(all_file, model_file, test_file, img_path)
+    ret = "{}&{}${}#{}".format(name, const.TEST, ret, img_path)
+    return ret
 
 
 if __name__ == '__main__':
-    file_path = "XGBoost_PDW1.csv"
-    # data = deal("a", file_path)
-    # print("done 1")
-    data_a = deal("b", file_path)
-    # print("done 2")
-    # data_c = deal("c", file_path)
-    # print(data)
-    # print(data_a)
-    # print(data_c)
+    print()
