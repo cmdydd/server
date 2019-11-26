@@ -78,10 +78,10 @@ class Example:
         X_train = X_train[self.feature_cols]
 
         train_data = pd.concat([X_train, Y_train], axis=1)
-        train_data.to_csv(train_file_path, index=False, encoding='UTF-8')  # 训练集文件
+        train_data.to_csv(train_file_path, index=False, encoding='UTF-8', mode='w')  # 训练集文件
 
         test_data = pd.concat([X_test, Y_test], axis=1)
-        test_data.to_csv(test_file_path, index=False, encoding='UTF-8')  # 测试集文件
+        test_data.to_csv(test_file_path, index=False, encoding='UTF-8', mode='w')  # 测试集文件
 
         return ""
 
@@ -93,13 +93,13 @@ class Example:
         y_train = x_train.pop(Label)
 
         if os.path.exists(model_file):
-            f = open(model_file, mode="rb")
+            f = open(model_file, mode="rb")  # 只读模式
             self.model = pickle.load(f)
         self.model.fit(x_train, y_train)
         if not os.path.exists(model_file):
-            f = open(model_file, mode='ab')
+            f = open(model_file, mode='ab')  # 追加模式
         else:
-            f = open(model_file, mode="wb")
+            f = open(model_file, mode="wb")  # 写入模式
         pickle.dump(self.model, f)  # 保存模型
         return x_train
 
@@ -174,12 +174,12 @@ class Example:
         print("ret:", ret)
 
         y_pred = y_pred.reshape(y_pred.shape[0], 1)
-        a = pd.read_csv(all_file, encoding='utf-8')
-        res = a.loc[y_test.index]
+        res = pd.read_csv(test_file_path, encoding='utf-8')
+        # a = pd.read_csv(all_file, encoding='utf-8')
+        # res = a.loc[y_test.index]
         res['pred'] = y_pred
         res = res.iloc[0:500]
-        res.to_csv(img_path, mode='a', index=False)
-
+        res.to_csv(img_path, index=False, encoding='UTF-8', mode='w')
         return ret
 
 

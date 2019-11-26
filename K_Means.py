@@ -20,6 +20,7 @@ class Example:
               '8320	                11160	   捷变160MHz32点	抖动10%	'"\n"
               )
         # 数据预处理
+        # cols = ['中心频点','PW', 'label']
         cols = ['中心频点', 'PA', 'PW', 'label']
         total_df = pd.read_csv(path, encoding='UTF-8')
         own_feature = total_df.columns.values  # 数据集具备的特征，包含标签label
@@ -36,21 +37,20 @@ class Example:
     def process(self, path_1):
         # K-means聚类
         # self.estimator.fit(self.data)  # 聚类
-        if len(self.feature_cols) <= 1:
-            return const.err_format("特征不足，无法聚类")
+        if len(self.feature_cols) <= 2:
+            return "err"
         self.estimator.fit(self.data)  # 聚类
-
         self.label_pred = self.estimator.labels_  # 获取聚类标签
         self.feature_cols.remove('label')  # 剔除标签，得到特征列表
         x0 = self.data[self.label_pred == 0]
         x1 = self.data[self.label_pred == 1]
-        print("len(self.feature_cols):", len(self.feature_cols))
         if len(self.feature_cols) == 2:
             self.two_wei(x0, x1, self.feature_cols, path_1)
         elif len(self.feature_cols) == 3:
             self.three_wei(x0, x1, self.feature_cols, path_1)
         else:
             print("error:特征不足，无法聚类！")
+        return ""
 
     def two_wei(self, x0, x1, feature_cols, path_1):
         plt.figure()
@@ -115,15 +115,15 @@ def deal(path):
     ex = Example(path)
 
     path_1 = "picture/kmeans_cluster.png"
-    ex.process(path_1)
-    print("path_1:", path_1)
+    rett = ex.process(path_1)
+    if rett == "err":
+        return const.err_format("特征不足，无法聚类")
     path_1 = const.DIR_FORMAT.format(const.CURRENT_DIR, path_1)
-
     ret = ex.acc()
     return "KMeans&{}${}".format(path_1, ret)
 
 
 if __name__ == '__main__':
     print("main")
-    path1 = "K_Means2.csv"
+    path1 = "K_Means1.csv"
     deal(path1)

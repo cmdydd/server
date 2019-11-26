@@ -41,10 +41,9 @@ class Example_XGB:
         X_train = X_train[self.feature_cols]
 
         train_data = pd.concat([X_train, Y_train], axis=1)
-        train_data.to_csv(train_file_path, index=False, encoding='UTF-8')  # 训练集文件
-
+        train_data.to_csv(train_file_path, index=False, encoding='UTF-8', mode='w')  # 训练集文件
         test_data = pd.concat([X_test, Y_test], axis=1)
-        test_data.to_csv(test_file_path, index=False, encoding='UTF-8')  # 测试集文件
+        test_data.to_csv(test_file_path, index=False, encoding='UTF-8', mode='w')  # 测试集文件
 
         return ""
 
@@ -70,9 +69,6 @@ class Example_XGB:
         self.plot_feature_importance(train, path2)
 
     def train_model(self, train_file, model_file):
-        # if model_file != "":
-        #     f = open(model_file, 'rb')
-        #     self.model = pickle.load(f)  # 读取模型
         train_data = pd.read_csv(train_file)
         x_train = train_data
         y_train = x_train.pop(Label)
@@ -105,12 +101,12 @@ class Example_XGB:
         print("ret:", ret)
 
         y_pred = y_pred.reshape(y_pred.shape[0], 1)
-        a = pd.read_csv(all_file, encoding='utf-8')
-        res = a.loc[y_test.index]
+        res = pd.read_csv(test_file_path, encoding='utf-8')
+        # a = pd.read_csv(all_file, encoding='utf-8')
+        # res = a.loc[y_test.index]
         res['pred'] = y_pred
         res = res.iloc[0:500]
-        res.to_csv(img_path, mode='a', index=False)
-
+        res.to_csv(img_path, mode='w', index=False, encoding='UTF-8')
         return ret
 
     def tree_pic(self, features, fmap_filename, path_1):
